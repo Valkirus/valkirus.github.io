@@ -1,7 +1,7 @@
 ---
 layout: project
 type: project
-image: img/vacay/vacay-square.png
+image: img/hexapod/hexapod1.jpg
 title: "Hexapod Robot"
 date: 2023
 published: true
@@ -11,7 +11,7 @@ labels:
 summary: "A 6 legged robot intended for learning inverse kinematics and forward kinematics and cycling through them to make a hexapod move."
 ---
 
-<img class="img-fluid" src="../img/vacay/vacay-home-page.png">
+<img class="img-fluid" src="../img/hexapod/hexapod1.jpg">
 
 Hexapod เป็นหุ่นยนต์ 6 ขา ที่ผมทำการศึกษาการเคลื่อนที่ของพวกแมลงและออกแบบระแบบการเคลื่อนที่ที่ สามารถแปลงไปเป็น code แล้วนำมาคำนวนและขยับไปในทิศทางที่ต้องการ
 
@@ -21,6 +21,66 @@ Hexapod เป็นหุ่นยนต์ 6 ขา ที่ผมทำก�
 
 ตัวอย่าง code ที่ใช้ในการหาค่าที่ต้องขยับใน Gait:
 
-{% gist b38240ffc44cff5c0992d4bf42c0289b1a344c91 %}
+```cpp
+Vector3 getGaitPoint(int leg, float pushFraction){  
  
-Source: <a href="https://github.com/theVacay/vacay">theVacay/vacay</a>
+
+  float rotateStrideLength = joy2CurrentVector.x * globalRotationMultiplier;
+  Vector2 v = joy1CurrentVector * Vector2(1,strideLengthMultiplier);
+  v.y = constrain(v.y,-maxStrideLength/2, maxStrideLength/2);
+  v = v * globalSpeedMultiplier;
+
+  float weightSum = abs(forwardAmount) + abs(turnAmount);
+
+  float t = tArray[leg];
+
+  //if(leg == 0)print_value("cycleProgress[leg]",cycleProgress[leg]);
+  
+  
+  //Propelling
+  if(t < pushFraction){ 
+    if(legStates[leg] != Propelling)setCycleStartPoints(leg);
+    legStates[leg] = Propelling;
+
+    ControlPoints[0] = cycleStartPoints[leg];
+    ControlPoints[1] = Vector3(v.x * strideMultiplier[leg] + distanceFromCenter, -v.y * strideMultiplier[leg], distanceFromGround).rotate(legPlacementAngle * rotationMultiplier[leg], Vector2(distanceFromCenter,0));
+    ControlPointsAmount = 2;    
+    Vector3 straightPoint = GetPointOnBezierCurve(ControlPoints, ControlPointsAmount, mapFloat(t,0,pushFraction,0,1));
+
+    RotateControlPoints[0] = cycleStartPoints[leg];
+    RotateControlPoints[1] = { distanceFromCenter + 40, 0, distanceFromGround };
+    RotateControlPoints[2] = { distanceFromCenter, rotateStrideLength, distanceFromGround };
+    RotateControlPointsAmount = 3;    
+    Vector3 rotatePoint = GetPointOnBezierCurve(RotateControlPoints, RotateControlPointsAmount, mapFloat(t,0,pushFraction,0,1));
+
+    //if(leg == 0)print_value("pushing point",(straightPoint*abs(forwardAmount) + rotatePoint*abs(turnAmount))/ weightSum);
+
+    return (straightPoint*abs(forwardAmount) + rotatePoint*abs(turnAmount))/ weightSum;
+  }
+
+  //Lifting
+  else{
+    if(legStates[leg] != Lifting)setCycleStartPoints(leg);
+    legStates[leg] = Lifting;
+
+    ControlPoints[0] = cycleStartPoints[leg];
+    ControlPoints[1] = cycleStartPoints[leg] + Vector3(0,0,liftHeight * liftHeightMultiplier);
+    ControlPoints[2] = Vector3(-v.x * strideMultiplier[leg] + distanceFromCenter, (v.y + strideOvershoot) * strideMultiplier[leg], distanceFromGround + landHeight).rotate(legPlacementAngle * rotationMultiplier[leg], Vector2(distanceFromCenter,0));
+    ControlPoints[3] = Vector3(-v.x * strideMultiplier[leg] + distanceFromCenter, v.y * strideMultiplier[leg], distanceFromGround).rotate(legPlacementAngle * rotationMultiplier[leg], Vector2(distanceFromCenter,0));
+    ControlPointsAmount = 4;
+    Vector3 straightPoint = GetPointOnBezierCurve(ControlPoints, ControlPointsAmount, mapFloat(t,pushFraction,1,0,1));
+
+    RotateControlPoints[0] = cycleStartPoints[leg];
+    RotateControlPoints[1] = cycleStartPoints[leg] + Vector3(0,0,liftHeight * liftHeightMultiplier);
+    RotateControlPoints[2] = { distanceFromCenter + 40, 0, distanceFromGround + liftHeight * liftHeightMultiplier};
+    RotateControlPoints[3] = { distanceFromCenter, -(rotateStrideLength + strideOvershoot), distanceFromGround + landHeight};
+    RotateControlPoints[4] = { distanceFromCenter, -rotateStrideLength, distanceFromGround};
+    RotateControlPointsAmount = 5;
+    Vector3 rotatePoint =  GetPointOnBezierCurve(RotateControlPoints, RotateControlPointsAmount, mapFloat(t,pushFraction,1,0,1));
+
+    //if(leg == 0)print_value("lifting point",(straightPoint*abs(forwardAmount) + rotatePoint*abs(turnAmount))/ weightSum);
+
+    return (straightPoint*abs(forwardAmount) + rotatePoint*abs(turnAmount))/ weightSum;
+  }  
+}
+```
