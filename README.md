@@ -1,3 +1,1 @@
-# Professional Portfolio
-
-For details on this professional portfolio, please see https://techfolios.github.io.
+Person portfolio for Jirakorn Sukmee based on TechFolios on github
