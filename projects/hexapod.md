@@ -4,7 +4,7 @@ type: project
 image: img/vacay/vacay-square.png
 title: "Hexapod Robot"
 date: 2023
-published: false
+published: true
 labels:
   - Robot
   - 3D Design
