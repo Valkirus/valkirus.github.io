@@ -11,7 +11,10 @@ labels:
 summary: "A 6 legged robot intended for learning inverse kinematics and forward kinematics and cycling through them to make a hexapod move."
 ---
 
-<img class="img-fluid" src="../img/hexapod/hexapod1.jpg">
+<div class="text-center p-4">
+  <img width="400px" src="../img/hexapod/hexapod1.jpg" class="img-thumbnail" >
+</div>
+
 
 Hexapod เป็นหุ่นยนต์ 6 ขา ที่ผมทำการศึกษาการเคลื่อนที่ของพวกแมลงและออกแบบระแบบการเคลื่อนที่ที่ สามารถแปลงไปเป็น code แล้วนำมาคำนวนและขยับไปในทิศทางที่ต้องการ
 
